@@ -14,8 +14,8 @@ module.exports = class Socket {
   #connectionPool = ConnectionPool.getInstance();
 
   constructor() {
-    // this.#socket = new WebSocket.Server({ port: process.env.SERVER_PORT });
-    // this.#socket.on('connection', this.#newConnectionHandler.bind(this));
+    this.#socket = new WebSocket.Server({ port: process.env.SERVER_PORT });
+    this.#socket.on('connection', this.#newConnectionHandler.bind(this));
 
     const webSocketServerPort = process.env.PORT || process.env.SERVER_PORT;
     if (!webSocketServerPort) {
