@@ -12,12 +12,19 @@ const LogoutExternalHandler = require('./handlers/logout-external-handler');
  */
 
 module.exports = class AuthController extends DefaultController {
-  constructor() {
+  /**
+   * @param {import('../../model/user/user-model')} currentUser
+   */
+  constructor(currentUser = null) {
     super();
 
-    this.handler = new LoginHandler();
+    let loginCurrentUser = null;
+    if (currentUser) {
+      loginCurrentUser = currentUser.login;
+    }
+    this.handler = new LoginHandler(loginCurrentUser);
     this.handler
-      .setNextHandler(new LogoutHandler())
+      .setNextHandler(new LogoutHandler(loginCurrentUser))
       .setNextHandler(new LoginExternalHandler())
       .setNextHandler(new LogoutExternalHandler());
   }

@@ -295,6 +295,23 @@ describe('Login test cases', () => {
 
     client.close();
   });
+  test('Two user login on the same connection', async () => {
+    const userFirst = getAuthUserRequest();
+    const userSecond = getAuthUserRequest();
+    const serverAnswers = [];
+
+    const client = await createClient();
+    client.on('message', (message) => serverAnswers.push(JSON.parse(message)));
+
+    client.send(JSON.stringify(userFirst.request.login));
+    await waitSomeAnswers(serverAnswers, 1);
+    client.send(JSON.stringify(userSecond.request.login));
+    await waitSomeAnswers(serverAnswers, 2);
+
+    expect(serverAnswers[1]).toEqual(userSecond.error.anotherUserAuthInConnection);
+
+    client.close();
+  });
 });
 
 describe('Logout test cases', () => {
@@ -702,6 +719,28 @@ describe('External logout cases', () => {
     expect(serverAnswers.length).toBe(1);
 
     client.close();
+    clientSecond.close();
+  });
+  test('Another user logout fail in another connecction', async () => {
+    const userFirst = getAuthUserRequest();
+    const userSecond = getAuthUserRequest();
+    const serverAnswers = [];
+
+    const clientFirst = await createClient();
+    clientFirst.on('message', (message) => serverAnswers.push(JSON.parse(message)));
+    const clientSecond = await createClient();
+
+    clientFirst.send(JSON.stringify(userFirst.request.login));
+    await waitSomeAnswers(serverAnswers, 1);
+    clientSecond.send(JSON.stringify(userSecond.request.login));
+    await waitSomeAnswers(serverAnswers, 2);
+    clientFirst.send(JSON.stringify(userSecond.request.logout));
+    await waitSomeAnswers(serverAnswers, 3);
+
+    expect(serverAnswers.length).toBe(3);
+    expect(serverAnswers[2].payload).toEqual(userSecond.error.alreadyAuth.payload);
+
+    clientFirst.close();
     clientSecond.close();
   });
 });
